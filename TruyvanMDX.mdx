@@ -1,0 +1,103 @@
+﻿--1/Truy vấn 1
+WITH
+MEMBER [Total Quantity Q2 2022] AS
+Sum(CrossJoin([Time].[Year].[2022], [Time].[Quarter].[2]),
+([Measures].[Quantity], [Product].[Category Name].[All]))
+MEMBER [Category Sales Q2 2022] AS
+Sum(CrossJoin([Time].[Year].[2022], [Time].[Quarter].[2]),
+([Measures].[Quantity], [Product].[Category Name].CurrentMember))
+MEMBER [Total Quantity Q2 2023] AS
+Sum(CrossJoin([Time].[Year].[2023], [Time].[Quarter].[2]),
+([Measures].[Quantity], [Product].[Category Name].[All]))
+MEMBER [Category Sales Q2 2023] AS
+Sum(CrossJoin([Time].[Year].[2023], [Time].[Quarter].[2]),
+([Measures].[Quantity], [Product].[Category Name].CurrentMember))
+
+MEMBER [Category Sales Ratio Q2 2022] AS
+IIF(
+[Measures].[Total Quantity Q2 2022] = 0, NULL,
+[Measures].[Category Sales Q2 2022] / [Measures].[Total
+Quantity Q2 2022]
+), FORMAT_STRING = "Percent"
+MEMBER [Measures].[Category Sales Ratio Q2 2023] AS
+IIF(
+[Measures].[Total Quantity Q2 2023] = 0, NULL,
+[Measures].[Category Sales Q2 2023] / [Measures].[Total
+Quantity Q2 2023]
+), FORMAT_STRING = "Percent"
+SELECT
+{[Category Sales Q2 2022],[Category Sales Ratio Q2 2022],
+[Category Sales Q2 2023],[Category Sales Ratio Q2 2023]} ON
+COLUMNS,
+{[Product].[Category Name].members * [Store].[Region
+Name].CHILDREN} ON ROWS
+FROM (
+SELECT
+{[Store].[Region Name].CHILDREN} ON COLUMNS,
+{[Product].[Category Name].members} ON ROWS,
+{[Time].[Year].[2022], [Time].[Year].[2023]} ON PAGES
+FROM Nhathuoc
+)
+
+
+WITH MEMBER [Danh_gia] AS
+IIF ((([Time].[Year].[2023],[Measures].[Quantity])-([Time].[Year].[2022],[Measures].[Quantity]))/([Time].[Year].[2022],[Measures].[Quantity]) <= (-0.30),"Không ưa chuộng","Ưa chuộng")
+MEMBER SLDH_2022 AS ([Time].[Year].[2022],[Measures].[Quantity])
+MEMBER SLDH_2023 AS ([Time].[Year].[2023],[Measures].[Quantity])
+MEMBER Total_2022 AS ([Time].[Year].[2022],[Measures].[Total])
+MEMBER Total_2023 AS ([Time].[Year].[2023],[Measures].[Total])
+
+
+--2/ Truy vấn 2
+SELECT
+{[Measures].[SLDH_2022],[Measures].[SLDH_2023],[Measures].[Total_2022],[Measures].[Total_2023],[Danh_gia]} ON COLUMNS,
+({[Store].[Region Name].CHILDREN},{[Customer].[Customer Category
+Name].CHILDREN}) ON ROWS
+FROM
+(SELECT
+{[Store].[Region Name].CHILDREN} ON COLUMNS,
+{[Customer].[Customer Category Name].CHILDREN} ON ROWS,
+{[Time].[Year].CHILDREN} ON PAGES,
+{[Product].[Category Name].CHILDREN} ON SECTIONS
+FROM Nhathuoc)
+WHERE [Product].[Category Name].[Thực phẩm chức năng]
+
+
+--3/ Truy vấn 3
+WITH
+MEMBER [Measures].[Total Price] AS
+FORMAT([Measures].[Total], "#,##0")
+MEMBER [Measures].[Danh_gia] AS
+IIF(
+[Time].[Year].CURRENTMEMBER IS [Time].[Year].&[2023],
+IIF(
+([Measures].[Total], [Time].[Year].&[2023]) >
+([Measures].[Total], [Time].[Year].&[2022]),
+"Hiệu quả", "Không hiệu quả"
+),
+IIF(
+([Measures].[Total], [Time].[Year].&[2022]) >
+([Measures].[Total], [Time].[Year].&[2023]),
+"Hiệu quả", "Không hiệu quả"
+)
+)
+SELECT
+CROSSJOIN (
+{[Measures].[Total Price], [Measures].[Danh_gia]},
+{[Time].[Year].[2023], [Time].[Year].[2022]}
+) ON COLUMNS,
+ORDER (
+{[Product].[Brand Name].[Brand Name].MEMBERS}
+* {[Store].[Region Name].CHILDREN},
+[Measures].[Total], BDESC
+) ON ROWS
+FROM
+(
+SELECT
+{[Store].[Region Name].CHILDREN} ON COLUMNS,
+{[Product].[Brand Name].[Brand Name].MEMBERS} ON ROWS,
+{[Time].[Year].[2023], [Time].[Year].[2022]} ON PAGES
+FROM LONGCHAU
+)
+WHERE
+([Product].[Category Name].&[Dược mỹ phẩm])
