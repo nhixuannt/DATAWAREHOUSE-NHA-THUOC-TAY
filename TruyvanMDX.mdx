@@ -40,15 +40,13 @@ FROM Nhathuoc
 )
 
 
+--2/ Truy vấn 2
 WITH MEMBER [Danh_gia] AS
 IIF ((([Time].[Year].[2023],[Measures].[Quantity])-([Time].[Year].[2022],[Measures].[Quantity]))/([Time].[Year].[2022],[Measures].[Quantity]) <= (-0.30),"Không ưa chuộng","Ưa chuộng")
 MEMBER SLDH_2022 AS ([Time].[Year].[2022],[Measures].[Quantity])
 MEMBER SLDH_2023 AS ([Time].[Year].[2023],[Measures].[Quantity])
 MEMBER Total_2022 AS ([Time].[Year].[2022],[Measures].[Total])
 MEMBER Total_2023 AS ([Time].[Year].[2023],[Measures].[Total])
-
-
---2/ Truy vấn 2
 SELECT
 {[Measures].[SLDH_2022],[Measures].[SLDH_2023],[Measures].[Total_2022],[Measures].[Total_2023],[Danh_gia]} ON COLUMNS,
 ({[Store].[Region Name].CHILDREN},{[Customer].[Customer Category
